@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/tekrus/Downloads/assignment/frogs.cpp
+reachability.hpp
+/home/tekrus/Downloads/assignment/reachability.hpp
+iostream
+-
+vector
+-
+list
+-
+functional
+-
+
+/home/tekrus/Downloads/assignment/reachability.hpp
+vector
+-
+list
+-
+functional
+-
+iostream
+-
+algorithm
+-
+typeinfo
+-
+memory
+-
+

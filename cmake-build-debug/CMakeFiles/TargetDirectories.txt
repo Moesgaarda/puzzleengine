@@ -1,0 +1,5 @@
+/home/tekrus/Downloads/assignment/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/tekrus/Downloads/assignment/cmake-build-debug/CMakeFiles/frogs.dir
+/home/tekrus/Downloads/assignment/cmake-build-debug/CMakeFiles/crossing.dir
+/home/tekrus/Downloads/assignment/cmake-build-debug/CMakeFiles/family.dir
+/home/tekrus/Downloads/assignment/cmake-build-debug/CMakeFiles/edit_cache.dir
