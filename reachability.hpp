@@ -79,8 +79,8 @@ public:
     state_space_t(
             const state_t initialState,
             function<container_t<function<void(state_t &)>>(state_t &)> transitionFunction,
-            bool invariantFunction(const state_t&) = [](
-                    const state_t &state) { return true; } // Default value is a function that takes a const state and returns true.
+            // Default value is a function that takes a const state and returns true.
+            bool (*invariantFunction)(const state_t&) = [](const state_t &state) { return true; }
     ) {
         _initialState = initialState;
         _transitionFunction = transitionFunction;
@@ -89,20 +89,20 @@ public:
     };
 
     // Constructor with cost enabled
+    template<typename lambda>
     state_space_t(
             const state_t initialState,
             const cost_t initialCost,
             function<container_t<function<void(state_t &)>>(state_t &)> transitionFunction,
             bool (*invariantFunction)(const state_t &) = [](const state_t &s) { return true; },
-            function<cost_t(const state_t &s, const cost_t &c)> costFunction = [](
-                    const state_t &s, const cost_t &c) { return cost_t{0, 0}; }
+            lambda costFunction = [](const state_t &s, const cost_t &c) { return cost_t{0, 0}; }
     ) {
         _initialState = initialState;
         _initialCost = initialCost;
         _transitionFunction = transitionFunction;
         _invariantFunction = invariantFunction;
-        _useCost = true;
         _costFunction = costFunction;
+        _useCost = true;
     }
 
     // The function to call the solver, default search order is breadth_first, as a sensible choice as defined in
@@ -127,7 +127,7 @@ state_space_t<state_t, container_t, cost_t>::solver(validation_f isGoalState, se
     trace_state<state_t> *traceState{};
     list<state_t> passed;
     list<trace_state<state_t> *> waiting;
-    list<state_t> solution;
+    list<state_t> traces;
     container_t<state_t> containedSolution;
 
     // Adding the states to waiting
@@ -149,17 +149,17 @@ state_space_t<state_t, container_t, cost_t>::solver(validation_f isGoalState, se
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
                 // Add stack trace to the solution list
-                solution.push_front(traceState->self);
+                traces.push_front(traceState->self);
                 traceState = traceState->parent;
             }
 
             // Add self trace to solution list
-            solution.push_front(traceState->self);
+            traces.push_front(traceState->self);
 
 
             // Convert to a vector
-            for (state_t &st: solution) {
-                containedSolution.push_back(st);
+            for (state_t &trace: traces) {
+                containedSolution.push_back(trace);
             }
 
             // Return early if a goal state was found
