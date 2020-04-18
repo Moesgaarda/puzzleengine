@@ -27,7 +27,7 @@ successors(ContainerT<function<void(StateT &)>> (*transitions)(const StateT &)) 
 }
 
 // Keep the trace
-template <class StateT>
+template<class StateT>
 struct trace_state {
     trace_state *parent = nullptr;
     StateT self = nullptr;
@@ -40,20 +40,18 @@ void log(string input) {
 
 // Overload of << operator to print list content
 template<class StateT>
-ostream& operator<<(ostream& os, const vector<StateT>& v)
-{
-    for(auto var : v){
-        os << (int)var;
+ostream &operator<<(ostream &os, const vector<StateT> &v) {
+    for (auto var : v) {
+        os << (int) var;
     }
     return os;
 }
 
 // Overload of << operator to print array content
-template <typename StateT>
-ostream & operator<<(ostream& os, const array<StateT, 3> &v)
-{
-    for(auto arr : v){
-        os << (int)arr;
+template<typename StateT>
+ostream &operator<<(ostream &os, const array<StateT, 3> &v) {
+    for (auto arr : v) {
+        os << (int) arr;
     }
     return os;
 }
@@ -97,7 +95,7 @@ public:
 template<class StateT, template<class...> class ContainerT>
 template<class ValidationFunction>
 ContainerT<StateT>
-state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  search_order_t order) {
+state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState, search_order_t order) {
     StateT currentState;
     trace_state<StateT> *traceState;
     list<StateT> passed;
@@ -110,17 +108,15 @@ state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  searc
 
     // Keep iterating through the waiting list until it is empty
     while (!waiting.empty()) {
-        if(order == breadth_first) {
+        if (order == breadth_first) {
             currentState = waiting.front()->self;
             traceState = waiting.front();
             waiting.pop_front();
-        }
-        else if (order == depth_first) {
+        } else if (order == depth_first) {
             currentState = waiting.back()->self;
             traceState = waiting.back();
             waiting.pop_back();
-        }
-        else {
+        } else {
             log("Invalid search order supplied.");
         }
         if (isGoalState(currentState)) {
@@ -135,7 +131,7 @@ state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  searc
 
 
             // Convert to a vector
-            for (StateT &st: solution){
+            for (StateT &st: solution) {
                 containedSolution.push_back(st);
             }
 
