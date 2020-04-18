@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <iterator>
 
 using namespace std;
 
@@ -37,11 +38,14 @@ void log(string input) {
     cout << input << endl;
 };
 
-template <typename StateT>
+// Overload of << operator to print list content
+template<class StateT>
 ostream& operator<<(ostream& os, const vector<StateT>& v)
 {
-    for(auto &var : v){
-        os << (int)var << " ";
+    int i = 0;
+    for(auto var : v){
+        os << (int)var;
+        i++;
     }
     return os;
 }
@@ -51,50 +55,45 @@ template<class StateT>
 class state_space_t {
 private:
     StateT _initialState; // Initial state
-    function<vector<function<void(StateT &)>>(StateT &)> _transitionFunctions;
+    function<vector<function<void(StateT &)>>(StateT &)> _transitionFunction;
     function<bool(const StateT &)> _invariantFunction;
 
     template<class ValidationFunction>
-    std::vector<StateT> solver(ValidationFunction isGoalState, search_order_t searchOrder);
+    vector<StateT> solver(ValidationFunction isGoalState, search_order_t searchOrder);
+
+
 public:
     state_space_t(
             StateT initialState,
-            function<vector<function<void(StateT &)>>(StateT &)> sucessorGenerator
-    );
+            function<vector<function<void(StateT &)>>(StateT &)> transitionFunction,
+            bool invariantFunc(const StateT &) = [](
+                    const StateT &state) { return true; } // Default value is a function that takes a const state and returns true.
+    ) {
+        _initialState = initialState;
+        _transitionFunction = transitionFunction;
+        _invariantFunction = invariantFunc;
+    }
 
 
     // The function to call the solver, default search order is breadth_first, as a sensible choice as defined in
     // requirement 8.
     template<class ValidationFunction>
-    std::vector<StateT> check(ValidationFunction isGoalState, search_order_t order = search_order_t::breadth_first);
+    vector<StateT> check(
+            ValidationFunction isGoalState,
+            search_order_t order = search_order_t::breadth_first) {
+        return solver(isGoalState, order);
+    }
 };
 
 template<class StateT>
 template<class ValidationFunction>
-vector<StateT> state_space_t<StateT>::check(ValidationFunction isGoalState, search_order_t order) {
-    std::vector<StateT> solution;
-    solution = solver(isGoalState, order);
-
-    // Returns the list of states.
-    return solution;
-}
-
-template<class StateT>
-state_space_t<StateT>::state_space_t(StateT initialState,
-                                            function<vector<function<void(StateT &)>>(StateT &)> sucessorGeneratorFunction) {
-    _initialState = initialState;
-    _transitionFunctions = sucessorGeneratorFunction;
-}
-
-template<class StateT>
-template<class ValidationF>
-std::vector<StateT>
-state_space_t<StateT>::solver(ValidationF isGoalState, search_order_t order) {
+vector<StateT>
+state_space_t<StateT>::solver(ValidationFunction isGoalState,  search_order_t order) {
     StateT currentState;
     trace_state<StateT> *traceState;
-    std::list<StateT> passed;
-    std::list<trace_state<StateT> *> waiting;
-    std::list<StateT> solution;
+    list<StateT> passed;
+    list<trace_state<StateT> *> waiting;
+    list<StateT> solution;
     vector<StateT> vectorSolution;
 
     // Adding the states to waiting
@@ -126,17 +125,20 @@ state_space_t<StateT>::solver(ValidationF isGoalState, search_order_t order) {
             for (StateT &state: solution){
                 vectorSolution.push_back(state);
             }
+
             return vectorSolution;
         }
-        if (!(std::find(passed.begin(), passed.end(), currentState) != passed.end())) {
+        if (!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
             passed.push_back(currentState);
-            auto transitions = _transitionFunctions(currentState);
+            auto transitions = _transitionFunction(currentState);
 
             for (auto transition: transitions) {
                 auto successor{currentState};
                 transition(successor);
 
-                waiting.push_back(new trace_state<StateT>{traceState, successor});
+                if (_invariantFunction(successor)) {
+                    waiting.push_back(new trace_state<StateT>{traceState, successor});
+                }
             }
         }
     }
@@ -147,5 +149,6 @@ state_space_t<StateT>::solver(ValidationF isGoalState, search_order_t order) {
 
     return vectorSolution;
 }
+
 
 #endif //PUZZLEENGINE_REACHABILITY_HPP
