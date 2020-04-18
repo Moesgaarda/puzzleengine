@@ -20,9 +20,9 @@ enum search_order_t {
 };
 
 // Pass the transition generator function
-template <class StateT>
-function<vector<function<void(StateT &)>>(StateT &)>
-successors(vector<function<void(StateT &)>> (*transitions)(const StateT &)) {
+template<class StateT, template<class...> class ContainerT>
+function<ContainerT<function<void(StateT &)>>(StateT &)>
+successors(ContainerT<function<void(StateT &)>> (*transitions)(const StateT &)) {
     return transitions;
 }
 
@@ -50,22 +50,33 @@ ostream& operator<<(ostream& os, const vector<StateT>& v)
     return os;
 }
 
+// Overload of << operator to print array content
+template <typename StateT>
+ostream & operator<<(ostream& os, const array<StateT, 3> &v)
+{
+    for(auto arr : v){
+        os << (int)arr;
+    }
+    return os;
+}
+
+
 // The state space class
-template<class StateT>
+template<class StateT, template<class...> class ContainerT>
 class state_space_t {
 private:
     StateT _initialState; // Initial state
-    function<vector<function<void(StateT &)>>(StateT &)> _transitionFunction;
+    function<ContainerT<function<void(StateT &)>>(StateT &)> _transitionFunction;
     function<bool(const StateT &)> _invariantFunction;
 
     template<class ValidationFunction>
-    vector<StateT> solver(ValidationFunction isGoalState, search_order_t searchOrder);
+    ContainerT<StateT> solver(ValidationFunction isGoalState, search_order_t searchOrder);
 
 
 public:
     state_space_t(
             StateT initialState,
-            function<vector<function<void(StateT &)>>(StateT &)> transitionFunction,
+            function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
             bool invariantFunc(const StateT &) = [](
                     const StateT &state) { return true; } // Default value is a function that takes a const state and returns true.
     ) {
@@ -78,23 +89,23 @@ public:
     // The function to call the solver, default search order is breadth_first, as a sensible choice as defined in
     // requirement 8.
     template<class ValidationFunction>
-    vector<StateT> check(
+    ContainerT<StateT> check(
             ValidationFunction isGoalState,
             search_order_t order = search_order_t::breadth_first) {
         return solver(isGoalState, order);
     }
 };
 
-template<class StateT>
+template<class StateT, template<class...> class ContainerT>
 template<class ValidationFunction>
-vector<StateT>
-state_space_t<StateT>::solver(ValidationFunction isGoalState,  search_order_t order) {
+ContainerT<StateT>
+state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  search_order_t order) {
     StateT currentState;
     trace_state<StateT> *traceState;
     list<StateT> passed;
     list<trace_state<StateT> *> waiting;
     list<StateT> solution;
-    vector<StateT> vectorSolution;
+    ContainerT<StateT> vectorSolution;
 
     // Adding the states to waiting
     waiting.push_back(new trace_state<StateT>{nullptr, _initialState});
