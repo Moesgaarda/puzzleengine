@@ -42,10 +42,8 @@ void log(string input) {
 template<class StateT>
 ostream& operator<<(ostream& os, const vector<StateT>& v)
 {
-    int i = 0;
     for(auto var : v){
         os << (int)var;
-        i++;
     }
     return os;
 }
@@ -74,6 +72,7 @@ private:
 
 
 public:
+    // Default constructor with no cost
     state_space_t(
             StateT initialState,
             function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
@@ -84,7 +83,6 @@ public:
         _transitionFunction = transitionFunction;
         _invariantFunction = invariantFunc;
     }
-
 
     // The function to call the solver, default search order is breadth_first, as a sensible choice as defined in
     // requirement 8.
@@ -105,7 +103,7 @@ state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  searc
     list<StateT> passed;
     list<trace_state<StateT> *> waiting;
     list<StateT> solution;
-    ContainerT<StateT> vectorSolution;
+    ContainerT<StateT> containedSolution;
 
     // Adding the states to waiting
     waiting.push_back(new trace_state<StateT>{nullptr, _initialState});
@@ -127,17 +125,22 @@ state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  searc
         }
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
+                // Add stack trace to the solution list
                 solution.push_front(traceState->self);
                 traceState = traceState->parent;
             }
 
-            solution.push_front(traceState->self); // Adds the start state to the solution trace.
+            // Add self trace to solution list
+            solution.push_front(traceState->self);
 
-            for (StateT &state: solution){
-                vectorSolution.push_back(state);
+
+            // Convert to a vector
+            for (StateT &st: solution){
+                containedSolution.push_back(st);
             }
 
-            return vectorSolution;
+            // Return early if a goal state was found
+            return containedSolution;
         }
         if (!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
             passed.push_back(currentState);
@@ -153,12 +156,7 @@ state_space_t<StateT, ContainerT>::solver(ValidationFunction isGoalState,  searc
             }
         }
     }
-
-    for (StateT &state: solution){
-        vectorSolution.push_back(state);
-    }
-
-    return vectorSolution;
+    return containedSolution;
 }
 
 
