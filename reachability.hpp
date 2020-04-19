@@ -147,7 +147,6 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
             waiting.pop_back();
         } else {
             log("Invalid search order supplied.");
-            return;
         }
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
