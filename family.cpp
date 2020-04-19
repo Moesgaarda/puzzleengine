@@ -14,7 +14,7 @@
 #include <deque>
 #include <array>
 #include <functional> // std::function
-#include <benchmark/benchmark.h>
+// #include <benchmark/benchmark.h>
 
 /** Model of the river crossing: persons and a boat */
 struct person_t
@@ -242,7 +242,7 @@ struct cost_t {
     }
 };
 
-void successors(deque<function<void(state_t &)>> (*transitions)(const state_t &));
+void successors(std::deque<std::function<void(state_t &)>> (*transitions)(const state_t &));
 
 bool goal(const state_t& s){
     return std::all_of(std::begin(s.persons), std::end(s.persons),
@@ -276,7 +276,7 @@ void solve(CostFn&& cost) { // no type checking: OK hack here, but not good for 
 }
 
 
-/* int main() {
+int main() {
     std::cout << "-- Solve using depth as a cost: ---\n";
     solve([](const state_t& state, const cost_t& prev_cost){
         return cost_t{ prev_cost.depth+1, prev_cost.noise };
@@ -299,10 +299,10 @@ void solve(CostFn&& cost) { // no type checking: OK hack here, but not good for 
             noise += 2; // younger son is more distressed, prefer him first
         return cost_t{ prev_cost.depth, noise };
     }); // son2 should get to the shore2 first
-} */
+}
 
 // Enable for benchmarking
-void BM_main(benchmark::State& state){
+/*void BM_main(benchmark::State& state){
     for(auto _ : state) {
         std::cout << "-- Solve using depth as a cost: ---\n";
         solve([](const state_t& state, const cost_t& prev_cost){
@@ -330,12 +330,14 @@ void BM_main(benchmark::State& state){
 }
 
 BENCHMARK(BM_main)->Iterations(100);
-BENCHMARK_MAIN();
+BENCHMARK_MAIN();*/
 
 /* Benchmark results:
  * g++ family.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfamily && ./benchmarkfamily
- * List: 156532644 ns (108448079 ns)
- *
+ * List:                                                    156532644 ns (108448079 ns)
+ * Deque:                                                   N/A ns (N/A ns) -> makes no sense due to sorting
+ * Priority queue instead of sorted list for waiting:       208847577 ns (114659967 ns)
+ * Not including std in header:                             144560425 ns (106712575 ns)
  */
 
 

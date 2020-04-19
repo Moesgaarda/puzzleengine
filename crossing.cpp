@@ -10,7 +10,7 @@
 #include <list>
 #include <array>
 #include <iostream>
-#include <benchmark/benchmark.h>
+// #include <benchmark/benchmark.h>
 
 enum actor { cabbage, goat, wolf }; // names of the actors
 enum class pos_t { shore1, travel, shore2}; // names of the actor positions
@@ -34,10 +34,10 @@ std::ostream& operator<<(std::ostream& os, const actors_t& actors) {
 
 // Overload of << operator to print array content
 template<class StateT, template<class...> class ContainerT>
-ostream &operator<<(ostream &os, const ContainerT<array<StateT, 3>> &v) {
+std::ostream &operator<<(std::ostream &os, const ContainerT<std::array<StateT, 3>> &v) {
     auto step = 0;
     for(auto c : v){
-        os << step++ << ": " << c << endl;
+        os << step++ << ": " << c << std::endl;
     }
     return os;
 }
@@ -87,25 +87,27 @@ void solve(){
 		std::cout << "#  CGW\n" << trace;
 }
 
-/*int main(){
+int main(){
 	solve();
-}*/
+}
 
 // Enable for benchmarking
-void BM_main(benchmark::State& state){
+/*void BM_main(benchmark::State& state){
     for(auto _ : state) {
         solve();
     }
 }
 
 BENCHMARK(BM_main)->Iterations(1000);
-BENCHMARK_MAIN();
+BENCHMARK_MAIN();*/
 
 /* Benchmark results:
  * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing
- * List: 110149 ns (47074 ns)
+ * List:                                    110149 ns (47074 ns)
+ * Deque:                                   83648  ns (19829 ns)
+ * Not including std namespace in header:   67146  ns (20203)
  *
- */
+ * */
 
 /** Sample output:
 #  CGW

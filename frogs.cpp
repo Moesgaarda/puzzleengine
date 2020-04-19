@@ -11,7 +11,7 @@
 #include <vector>
 #include <list>
 #include <functional> // std::function
-#include <benchmark/benchmark.h>
+// #include <benchmark/benchmark.h>
 
 enum class frog { empty, green, brown };
 using stones_t = std::vector<frog>;
@@ -29,12 +29,12 @@ std::ostream& operator<<(std::ostream& os, const stones_t& stones) {
 }
 
 // Overload of << operator to print list content
-template<class StateT, template<class...> class ContainerT, typename = enable_if_t<!is_same<StateT, char>::value>>
-ostream &operator<<(ostream &os, const ContainerT<ContainerT<StateT>> &v) {
+template<class StateT, template<class...> class ContainerT, typename = std::enable_if_t<!std::is_same<StateT, char>::value>>
+std::ostream &operator<<(std::ostream &os, const ContainerT<ContainerT<StateT>> &v) {
     for(auto stones : v){
         os << "State of " << stones.size() << " stones: " << stones << '\n';
     }
-    os << endl;
+    os << std::endl;
     return os;
 }
 
@@ -125,10 +125,10 @@ void solve(size_t frogs, search_order_t order = search_order_t::breadth_first)
 		finish[finish.size()-frogs-1] = frog::green; // green on right
 	}
 	std::cout << "Leaping frog puzzle start: " << start << ", finish: " << finish << '\n';
-	auto space = state_space_t{
-		std::move(start),                 // initial state
-		successors<stones_t>(transitions) // successor-generating function from your library
-	};
+    auto space = state_space_t{
+        std::move(start),                 // initial state
+        successors<stones_t>(transitions) // successor-generating function from your library
+    };
 	auto solutions = space.check(
 		[finish=std::move(finish)](const stones_t& state){ return state==finish; },
 		order);
@@ -138,16 +138,16 @@ void solve(size_t frogs, search_order_t order = search_order_t::breadth_first)
 	}
 }
 
-/*int main()
+int main()
 {
 	explain();
 	std::cout << "--- Solve with depth-first search: ---\n";
 	solve(2, search_order_t::depth_first);
 	solve(4); // 20 frogs may take >5.8GB of memory
-}*/
+}
 
 // Enable for benchmarking
-void BM_main(benchmark::State& state){
+/*void BM_main(benchmark::State& state){
     for(auto _ : state) {
         explain();
         std::cout << "--- Solve with depth-first search: ---\n";
@@ -157,12 +157,13 @@ void BM_main(benchmark::State& state){
 }
 
 BENCHMARK(BM_main)->Iterations(1000);
-BENCHMARK_MAIN();
+BENCHMARK_MAIN();*/
 
 /* Benchmark results:
  * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
- * List: 1920407 ns (543956 ns)
- *
+ * List:                                  1920407 ns (543956 ns)
+ * Deque:                                 2659367 ns (504552 ns)
+ * Not including std namespace in header: 1840821 ns (534571 ns)
  */
 
 /** Sample output:

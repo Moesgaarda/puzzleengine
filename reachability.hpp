@@ -12,7 +12,6 @@
 #include <iterator>
 #include <fstream>
 
-using namespace std;
 
 // Search order enum for requirement #4
 enum search_order_t {
@@ -21,8 +20,8 @@ enum search_order_t {
 
 // Pass the transition generator function
 template<class StateT, template<class...> class ContainerT>
-function<ContainerT<function<void(StateT &)>>(StateT &)>
-successors(ContainerT<function<void(StateT &)>> (*transitions)(const StateT &)) {
+std::function<ContainerT<std::function<void(StateT &)>>(StateT &)>
+successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT &)) {
     return transitions;
 }
 
@@ -34,9 +33,9 @@ struct trace_state {
 };
 
 // Log function, logs to file so it doesn't flood the console
-void log(const string& input) {
-    ofstream out;
-    out.open("/home/tekrus/output.txt", ofstream::app);
+void log(const std::string& input) {
+    std::ofstream out;
+    out.open("/home/tekrus/output.txt", std::ofstream::app);
     out << input;
     out.close();
 }
@@ -48,10 +47,10 @@ class state_space_t {
 private:
     StateT _initialState; // Initial state
     CostT _initialCost;
-    function<ContainerT<function<void(StateT &)>>(StateT &)> _transitionFunction;
-    function<bool(const StateT &)> _invariantFunction;
+    std::function<ContainerT<std::function<void(StateT &)>>(StateT &)> _transitionFunction;
+    std::function<bool(const StateT &)> _invariantFunction;
     bool _useCost = false;
-    function<CostT(const StateT &state, const CostT &cost)> _costFunction;
+    std::function<CostT(const StateT &state, const CostT &cost)> _costFunction;
     template<class validation_f>
     ContainerT<ContainerT<StateT>> solver(validation_f isGoalState, search_order_t searchOrder);
 
@@ -63,17 +62,16 @@ public:
     // Default constructor with no cost
     state_space_t(
             const StateT initialState,
-            function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
+            std::function<ContainerT<std::function<void(StateT &)>>(StateT &)> transitionFunction,
             // Default value is a function that takes a const state and returns true.
             bool (*invariantFunction)(const StateT&) = [](const StateT &state) { return true; }
     ) {
         _initialState = initialState;
         _transitionFunction = transitionFunction;
         _invariantFunction = invariantFunction;
-        _useCost = false;
 
         // Fail if arguments are of wrong types (Requirement 9)
-        static_assert(is_class<StateT>::value, "StateT must be struct or class.");
+        static_assert(std::is_class<StateT>::value, "StateT must be struct or class.");
 
     };
 
@@ -82,16 +80,16 @@ public:
     state_space_t(
             const StateT initialState,
             const CostT initialCost,
-            function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
+            std::function<ContainerT<std::function<void(StateT &)>>(StateT &)> transitionFunction,
             bool (*invariantFunction)(const StateT &) = [](const StateT &s) { return true; },
             lambda costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
     ) {
 
         // Fail if arguments are of wrong types (Requirement 9)
         // It is enough to check if StateT and CostT are classes, as it also captures structs.
-        static_assert(is_class<StateT>::value, "StateT must be a class or struct.");
-        static_assert(is_class<CostT>::value, "CostT must be a class or struct.");
-        static_assert(is_convertible<lambda, function<CostT (const StateT&, const CostT&)>>::value,
+        static_assert(std::is_class<StateT>::value, "StateT must be a class or struct.");
+        static_assert(std::is_class<CostT>::value, "CostT must be a class or struct.");
+        static_assert(std::is_convertible<lambda, std::function<CostT (const StateT&, const CostT&)>>::value,
                 "Cost function must be a function, that can be converted to function<CostT (const StateT&, const CostT&)>>");
 
         _initialState = initialState;
@@ -123,9 +121,9 @@ ContainerT<ContainerT<StateT>>
 state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, search_order_t order) {
     StateT currentState;
     trace_state<StateT> *traceState{};
-    list<StateT> passed;
-    list<trace_state<StateT> *> waiting;
-    list<StateT> traces;
+    std::list<StateT> passed;
+    std::list<trace_state<StateT> *> waiting;
+    std::list<StateT> traces;
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 
@@ -190,13 +188,13 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     CostT currentCost, newCost;
     currentCost = _initialCost;
     trace_state<StateT> *traceState;
-    list<StateT> passed, solution;
-    list<pair<CostT, trace_state<StateT> *>> waiting;
+    std::list<StateT> passed, solution;
+    std::list<std::pair<CostT, trace_state<StateT> *>> waiting;
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 
     // Generate a set of cost and trace state to find the lowest cost aka where to go next
-    waiting.push_back(make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
+    waiting.push_back(std::make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
 
     while(!waiting.empty()){
         // Prepare to go to the next state, which is next in the queue
@@ -237,12 +235,12 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                     continue;
                 }
                 newCost = _costFunction(successor, currentCost);
-                waiting.push_back(make_pair(newCost, new trace_state<StateT>{traceState, successor}));
+                waiting.push_back(std::make_pair(newCost, new trace_state<StateT>{traceState, successor}));
             }
             if (!transitions.empty()) {
                 // Sort the list to make sure that the lowest cost is first.
-                waiting.sort([](const pair<CostT, trace_state<StateT> *> &a,
-                             pair<CostT, trace_state<StateT> *> &b) { return a.first < b.first; });
+                waiting.sort([](const std::pair<CostT, trace_state<StateT> *> &a,
+                                std::pair<CostT, trace_state<StateT> *> &b) { return a.first < b.first; });
             }
 
         }
