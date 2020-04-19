@@ -12,22 +12,32 @@
 #include <iostream>
 // #include <benchmark/benchmark.h>
 
-enum actor { cabbage, goat, wolf }; // names of the actors
-enum class pos_t { shore1, travel, shore2}; // names of the actor positions
-using actors_t = std::array<pos_t,3>; // positions of the actors
+enum actor {
+    cabbage, goat, wolf
+}; // names of the actors
+enum class pos_t {
+    shore1, travel, shore2
+}; // names of the actor positions
+using actors_t = std::array<pos_t, 3>; // positions of the actors
 
 // Overload to print position of actor
-std::ostream& operator<<(std::ostream& os, const pos_t& pos) {
-    switch(pos) {
-        case pos_t::shore1: os << "1"; break;
-        case pos_t::travel: os << "~"; break;
-        case pos_t::shore2: os << "2"; break;
+std::ostream &operator<<(std::ostream &os, const pos_t &pos) {
+    switch (pos) {
+        case pos_t::shore1:
+            os << "1";
+            break;
+        case pos_t::travel:
+            os << "~";
+            break;
+        case pos_t::shore2:
+            os << "2";
+            break;
     }
     return os;
 }
 
 // Overload to print actor
-std::ostream& operator<<(std::ostream& os, const actors_t& actors) {
+std::ostream &operator<<(std::ostream &os, const actors_t &actors) {
     os << actors[actor::cabbage] << actors[actor::goat] << actors[actor::wolf];
     return os;
 }
@@ -36,59 +46,58 @@ std::ostream& operator<<(std::ostream& os, const actors_t& actors) {
 template<class StateT, template<class...> class ContainerT>
 std::ostream &operator<<(std::ostream &os, const ContainerT<std::array<StateT, 3>> &v) {
     auto step = 0;
-    for(auto c : v){
+    for (auto c : v) {
         os << step++ << ": " << c << std::endl;
     }
     return os;
 }
 
-auto transitions(const actors_t& actors)
-{
-	auto res = std::list<std::function<void(actors_t&)>>{};
-	for (auto i=0u; i<actors.size(); ++i)
-		switch(actors[i]) {
-		case pos_t::shore1:
-			res.push_back([i](actors_t& actors){ actors[i] = pos_t::travel; });
-			break;
-		case pos_t::travel:
-			res.push_back([i](actors_t& actors){ actors[i] = pos_t::shore1; });
-			res.push_back([i](actors_t& actors){ actors[i] = pos_t::shore2; });
-			break;
-		case pos_t::shore2:
-			res.push_back([i](actors_t& actors){ actors[i] = pos_t::travel; });
-			break;
-		}
-	return res;
+auto transitions(const actors_t &actors) {
+    auto res = std::list<std::function<void(actors_t &)>>{};
+    for (auto i = 0u; i < actors.size(); ++i)
+        switch (actors[i]) {
+            case pos_t::shore1:
+                res.push_back([i](actors_t &actors) { actors[i] = pos_t::travel; });
+                break;
+            case pos_t::travel:
+                res.push_back([i](actors_t &actors) { actors[i] = pos_t::shore1; });
+                res.push_back([i](actors_t &actors) { actors[i] = pos_t::shore2; });
+                break;
+            case pos_t::shore2:
+                res.push_back([i](actors_t &actors) { actors[i] = pos_t::travel; });
+                break;
+        }
+    return res;
 }
 
-bool is_valid(const actors_t& actors) {
-	// only one passenger:
-	if (std::count(std::begin(actors), std::end(actors), pos_t::travel)>1)
-		return false;
-	// goat cannot be left alone with wolf, as wolf will eat the goat:
-	if (actors[actor::goat]==actors[actor::wolf] && actors[actor::cabbage]==pos_t::travel)
-		return false;
-	// goat cannot be left alone with cabbage, as goat will eat the cabbage:
-	if (actors[actor::goat]==actors[actor::cabbage] && actors[actor::wolf]==pos_t::travel)
-		return false;
-	return true;
+bool is_valid(const actors_t &actors) {
+    // only one passenger:
+    if (std::count(std::begin(actors), std::end(actors), pos_t::travel) > 1)
+        return false;
+    // goat cannot be left alone with wolf, as wolf will eat the goat:
+    if (actors[actor::goat] == actors[actor::wolf] && actors[actor::cabbage] == pos_t::travel)
+        return false;
+    // goat cannot be left alone with cabbage, as goat will eat the cabbage:
+    if (actors[actor::goat] == actors[actor::cabbage] && actors[actor::wolf] == pos_t::travel)
+        return false;
+    return true;
 }
 
-void solve(){
-	auto state_space = state_space_t{
-		actors_t{},                // initial state
-		successors<actors_t>(transitions), // successor generator from your library
-		&is_valid};                        // invariant over all states
-	auto solution = state_space.check(
-		[](const actors_t& actors){ // all actors should be on the shore2:
-			return std::count(std::begin(actors), std::end(actors), pos_t::shore2)==actors.size();
-		});
-	for (auto&& trace: solution)
-		std::cout << "#  CGW\n" << trace;
+void solve() {
+    auto state_space = state_space_t{
+            actors_t{},                // initial state
+            successors<actors_t>(transitions), // successor generator from your library
+            &is_valid};                        // invariant over all states
+    auto solution = state_space.check(
+            [](const actors_t &actors) { // all actors should be on the shore2:
+                return std::count(std::begin(actors), std::end(actors), pos_t::shore2) == actors.size();
+            });
+    for (auto &&trace: solution)
+        std::cout << "#  CGW\n" << trace;
 }
 
-int main(){
-	solve();
+int main() {
+    solve();
 }
 
 // Enable for benchmarking

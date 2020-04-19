@@ -33,7 +33,7 @@ struct trace_state {
 };
 
 // Log function, logs to file so it doesn't flood the console
-void log(const std::string& input) {
+void log(const std::string &input) {
     std::ofstream out;
     out.open("/home/tekrus/output.txt", std::ofstream::app);
     out << input;
@@ -51,6 +51,7 @@ private:
     std::function<bool(const StateT &)> _invariantFunction;
     bool _useCost = false;
     std::function<CostT(const StateT &state, const CostT &cost)> _costFunction;
+
     template<class validation_f>
     ContainerT<ContainerT<StateT>> solver(validation_f isGoalState, search_order_t searchOrder);
 
@@ -64,7 +65,7 @@ public:
             const StateT initialState,
             std::function<ContainerT<std::function<void(StateT &)>>(StateT &)> transitionFunction,
             // Default value is a function that takes a const state and returns true.
-            bool (*invariantFunction)(const StateT&) = [](const StateT &state) { return true; }
+            bool (*invariantFunction)(const StateT &) = [](const StateT &state) { return true; }
     ) {
         _initialState = initialState;
         _transitionFunction = transitionFunction;
@@ -89,8 +90,8 @@ public:
         // It is enough to check if StateT and CostT are classes, as it also captures structs.
         static_assert(std::is_class<StateT>::value, "StateT must be a class or struct.");
         static_assert(std::is_class<CostT>::value, "CostT must be a class or struct.");
-        static_assert(std::is_convertible<lambda, std::function<CostT (const StateT&, const CostT&)>>::value,
-                "Cost function must be a function, that can be converted to function<CostT (const StateT&, const CostT&)>>");
+        static_assert(std::is_convertible<lambda, std::function<CostT(const StateT &, const CostT &)>>::value,
+                      "Cost function must be a function, that can be converted to function<CostT (const StateT&, const CostT&)>>");
 
         _initialState = initialState;
         _initialCost = initialCost;
@@ -107,7 +108,7 @@ public:
             validation_f isGoalState,
             search_order_t order = search_order_t::breadth_first) {
 
-        if(_useCost){
+        if (_useCost) {
             return costSolver(isGoalState);
         }
         return solver(isGoalState, order);
@@ -124,10 +125,14 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
     std::list<StateT> passed;
     std::list<trace_state<StateT> *> waiting;
     std::list<StateT> traces;
+
+    // Two containers are used, one to hold a result in the given container type and another to
+    // hold all solutions (result)
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 
-    // Adding the states to waiting
+    // Add the initial to waiting list to have a starting point
+    // Set parent as nullptr to know when to stop
     waiting.push_back(new trace_state<StateT>{nullptr, _initialState});
 
     // Keep iterating through the waiting list until it is empty
@@ -142,6 +147,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
             waiting.pop_back();
         } else {
             log("Invalid search order supplied.");
+            return;
         }
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
@@ -153,15 +159,17 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
             // Add self trace to solution list
             traces.push_front(traceState->self);
 
-            // Convert to a generic type
-            for(auto &trace: traces){
+            // Convert to a generic type by pushing them all to the contained solution.
+            for (auto &trace: traces) {
                 containedSolution.push_back(trace);
             }
 
+            // Add found result to list of result traces.
             result.push_back(containedSolution);
-            // Return early if a goal state was found
-           // return result;
         }
+
+        // Check if the element already exists between in the passed states list to ensure that
+        // you don't re-visit it.
         if (!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
             passed.push_back(currentState);
             auto transitions = _transitionFunction(currentState);
@@ -196,7 +204,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     // Generate a set of cost and trace state to find the lowest cost aka where to go next
     waiting.push_back(std::make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
 
-    while(!waiting.empty()){
+    while (!waiting.empty()) {
         // Prepare to go to the next state, which is next in the queue
         currentState = waiting.front().second->self;
         currentCost = waiting.front().first; // First element of pair is cost
@@ -223,7 +231,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
         }
 
         // Check if current state has already been passed otherwise push it
-        if(!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
+        if (!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
             passed.push_back(currentState);
             auto transitions = _transitionFunction(currentState);
 
