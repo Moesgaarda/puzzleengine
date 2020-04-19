@@ -71,17 +71,29 @@ public:
         _transitionFunction = transitionFunction;
         _invariantFunction = invariantFunction;
         _useCost = false;
+
+        // Fail if arguments are of wrong types (Requirement 9)
+        static_assert(is_class<StateT>::value, "StateT must be struct or class.");
+
     };
 
     // Constructor with cost enabled
-    template<typename T>
+    template<typename lambda>
     state_space_t(
             const StateT initialState,
             const CostT initialCost,
             function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
             bool (*invariantFunction)(const StateT &) = [](const StateT &s) { return true; },
-            T costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
+            lambda costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
     ) {
+
+        // Fail if arguments are of wrong types (Requirement 9)
+        // It is enough to check if StateT and CostT are classes, as it also captures structs.
+        static_assert(is_class<StateT>::value, "StateT must be a class or struct.");
+        static_assert(is_class<CostT>::value, "CostT must be a class or struct.");
+        static_assert(is_convertible<lambda, function<CostT (const StateT&, const CostT&)>>::value,
+                "Cost function must be a function, that can be converted to function<CostT (const StateT&, const CostT&)>>");
+
         _initialState = initialState;
         _initialCost = initialCost;
         _transitionFunction = transitionFunction;
