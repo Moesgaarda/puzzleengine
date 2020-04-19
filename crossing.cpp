@@ -15,6 +15,32 @@ enum actor { cabbage, goat, wolf }; // names of the actors
 enum class pos_t { shore1, travel, shore2}; // names of the actor positions
 using actors_t = std::array<pos_t,3>; // positions of the actors
 
+// Overload to print position of actor
+std::ostream& operator<<(std::ostream& os, const pos_t& pos) {
+    switch(pos) {
+        case pos_t::shore1: os << "1"; break;
+        case pos_t::travel: os << "~"; break;
+        case pos_t::shore2: os << "2"; break;
+    }
+    return os;
+}
+
+// Overload to print actor
+std::ostream& operator<<(std::ostream& os, const actors_t& actors) {
+    os << actors[actor::cabbage] << actors[actor::goat] << actors[actor::wolf];
+    return os;
+}
+
+// Overload of << operator to print array content
+template<class StateT, template<class...> class ContainerT>
+ostream &operator<<(ostream &os, const ContainerT<array<StateT, 3>> &v) {
+    auto step = 0;
+    for(auto c : v){
+        os << step++ << ": " << c << endl;
+    }
+    return os;
+}
+
 auto transitions(const actors_t& actors)
 {
 	auto res = std::list<std::function<void(actors_t&)>>{};

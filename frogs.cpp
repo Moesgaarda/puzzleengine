@@ -15,6 +15,28 @@
 enum class frog { empty, green, brown };
 using stones_t = std::vector<frog>;
 
+// Overload
+std::ostream& operator<<(std::ostream& os, const stones_t& stones) {
+    for (auto&& stone: stones)
+        switch (stone) {
+            case frog::green: os << "G"; break;
+            case frog::empty: os << "_"; break;
+            case frog::brown: os << "B"; break;
+            default: os << "?"; break; // something went terribly wrong
+        }
+    return os;
+}
+
+// Overload of << operator to print list content
+template<class StateT, template<class...> class ContainerT, typename = enable_if_t<!is_same<StateT, char>::value>>
+ostream &operator<<(ostream &os, const ContainerT<ContainerT<StateT>> &v) {
+    for(auto stones : v){
+        os << "State of " << stones.size() << " stones: " << stones << '\n';
+    }
+    os << endl;
+    return os;
+}
+
 auto transitions(const stones_t& stones)
 {
 	auto res = std::vector<std::function<void(stones_t&)>>{};
@@ -110,8 +132,8 @@ void solve(size_t frogs, search_order_t order = search_order_t::breadth_first)
 		[finish=std::move(finish)](const stones_t& state){ return state==finish; },
 		order);
 	for (auto&& trace: solutions) {
-		std::cout << "Solution: trace of " << trace.size() << " states\n";
-		std::cout << trace;
+		std::cout << "Solution: trace of " << solutions.size() << " states\n";
+		std::cout << trace << std::endl;
 	}
 }
 

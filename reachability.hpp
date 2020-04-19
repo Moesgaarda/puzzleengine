@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <iterator>
+#include <fstream>
 
 using namespace std;
 
@@ -25,56 +26,20 @@ successors(ContainerT<function<void(StateT &)>> (*transitions)(const StateT &)) 
     return transitions;
 }
 
-// Keep the trace with a copy of self and a pointer to parent.
+// Struct to save the current trace.
 template<class StateT>
 struct trace_state {
     trace_state *parent = nullptr;
     StateT self = nullptr;
 };
 
-// Log function to print output, used in family.cpp instead of cout.
-void log(string input) {
-    cout << input << endl;
+// Log function, logs to file so it doesn't flood the console
+void log(const string& input) {
+    ofstream out;
+    out.open("/home/tekrus/output.txt", ofstream::app);
+    out << input;
+    out.close();
 }
-
-// Overload of << operator to print list content
-template<class StateT, template<class...> class ContainerT, typename = enable_if_t<!is_same<StateT, char>::value>>
-ostream &operator<<(ostream &os, const ContainerT<ContainerT<StateT>> &v) {
-    for(auto c : v){
-        os << c;
-    }
-    return os;
-}
-
-// Overload of << operator to print list content
-template<class StateT, template<class...> class ContainerT, typename = enable_if_t<!is_same<StateT, char>::value>>
-ostream &operator<<(ostream &os, const ContainerT<StateT> &v) {
-    for(auto c : v){
-        os << (int)c;
-    }
-    os << endl;
-    return os;
-}
-
-// Overload of << operator to print array content
-template<class StateT, template<class...> class ContainerT>
-ostream &operator<<(ostream &os, const ContainerT<array<StateT, 3>> &v) {
-    for(auto c : v){
-        os << c;
-    }
-    return os;
-}
-
-// Overload of << operator to print array content
-template<class StateT>
-ostream &operator<<(ostream &os, const array<StateT, 3> &v) {
-    for(auto c : v){
-        os << (int)c;
-    }
-    os << endl;
-    return os;
-}
-
 
 
 // The state space class
@@ -109,13 +74,13 @@ public:
     };
 
     // Constructor with cost enabled
-    template<typename lambda>
+    template<typename T>
     state_space_t(
             const StateT initialState,
             const CostT initialCost,
             function<ContainerT<function<void(StateT &)>>(StateT &)> transitionFunction,
             bool (*invariantFunction)(const StateT &) = [](const StateT &s) { return true; },
-            lambda costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
+            T costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
     ) {
         _initialState = initialState;
         _initialCost = initialCost;
@@ -139,6 +104,7 @@ public:
     }
 };
 
+// The default solver when cost is not involved
 template<class StateT, template<class...> class ContainerT, class CostT>
 template<class validation_f>
 ContainerT<ContainerT<StateT>>
@@ -149,7 +115,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
     list<trace_state<StateT> *> waiting;
     list<StateT> traces;
     ContainerT<StateT> containedSolution;
-    ContainerT<ContainerT<StateT>> test;
+    ContainerT<ContainerT<StateT>> result;
 
     // Adding the states to waiting
     waiting.push_back(new trace_state<StateT>{nullptr, _initialState});
@@ -182,9 +148,9 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
                 containedSolution.push_back(trace);
             }
 
-            test.push_back(containedSolution);
+            result.push_back(containedSolution);
             // Return early if a goal state was found
-            return test;
+           // return result;
         }
         if (!(find(passed.begin(), passed.end(), currentState) != passed.end())) {
             passed.push_back(currentState);
@@ -200,9 +166,10 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
             }
         }
     }
-    return test;
+    return result;
 }
 
+// The solver for when cost is involved.
 template<class StateT, template<class...> class ContainerT, class CostT>
 template<class validation_f>
 ContainerT<ContainerT<StateT>>
@@ -214,7 +181,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     list<StateT> passed, solution;
     list<pair<CostT, trace_state<StateT> *>> waiting;
     ContainerT<StateT> containedSolution;
-    ContainerT<ContainerT<StateT>> test;
+    ContainerT<ContainerT<StateT>> result;
 
     // Generate a set of cost and trace state to find the lowest cost aka where to go next
     waiting.push_back(make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
@@ -242,10 +209,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                 containedSolution.push_back(st);
             }
 
-            test.push_back(containedSolution);
-
-            // Return early if a goal state was found
-            return test;
+            result.push_back(containedSolution);
         }
 
         // Check if current state has already been passed otherwise push it
@@ -272,7 +236,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
         }
     }
 
-    return test;
+    return result;
 }
 
 #endif //PUZZLEENGINE_REACHABILITY_HPP
