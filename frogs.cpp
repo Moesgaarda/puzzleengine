@@ -25,11 +25,11 @@ std::ostream &operator<<(std::ostream &os, const stones_t &stones) {
             case frog::green:
                 os << "G";
                 break;
-            case frog::empty:
-                os << "_";
-                break;
             case frog::brown:
                 os << "B";
+                break;
+            case frog::empty:
+                os << "_";
                 break;
         }
     return os;
@@ -117,7 +117,7 @@ void explain() {
     }
 }
 
-void solve(size_t frogs, search_order_t order = search_order_t::breadth_first) {
+void solve(size_t frogs, search_order order = search_order::breadth_first) {
     const auto stones = frogs * 2 + 1; // frogs on either side and 1 empty in the middle
     auto start = stones_t(stones, frog::empty);  // initially all empty
     auto finish = stones_t(stones, frog::empty); // initially all empty
@@ -144,7 +144,7 @@ void solve(size_t frogs, search_order_t order = search_order_t::breadth_first) {
 int main() {
     explain();
     std::cout << "--- Solve with depth-first search: ---\n";
-    solve(2, search_order_t::depth_first);
+    solve(2, search_order::depth_first);
     solve(4); // 20 frogs may take >5.8GB of memory
 }
 
@@ -153,7 +153,7 @@ int main() {
     for(auto _ : state) {
         explain();
         std::cout << "--- Solve with depth-first search: ---\n";
-        solve(2, search_order_t::depth_first);
+        solve(2, search_order::depth_first);
         solve(4); // 20 frogs may take >5.8GB of memory
     }
 }

@@ -14,7 +14,7 @@
 
 
 // Search order enum for requirement #4
-enum search_order_t {
+enum class search_order {
     breadth_first, depth_first
 };
 
@@ -53,7 +53,7 @@ private:
     std::function<CostT(const StateT &state, const CostT &cost)> _costFunction;
 
     template<class validation_f>
-    ContainerT<ContainerT<StateT>> solver(validation_f isGoalState, search_order_t searchOrder);
+    ContainerT<ContainerT<StateT>> solver(validation_f isGoalState, search_order searchOrder);
 
     template<class validation_f>
     ContainerT<ContainerT<StateT>> costSolver(validation_f isGoalState);
@@ -106,7 +106,7 @@ public:
     template<class validation_f>
     ContainerT<ContainerT<StateT>> check(
             validation_f isGoalState,
-            search_order_t order = search_order_t::breadth_first) {
+            search_order order = search_order::breadth_first) {
 
         if (_useCost) {
             return costSolver(isGoalState);
@@ -119,7 +119,7 @@ public:
 template<class StateT, template<class...> class ContainerT, class CostT>
 template<class validation_f>
 ContainerT<ContainerT<StateT>>
-state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, search_order_t order) {
+state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, search_order order) {
     StateT currentState;
     trace_state<StateT> *traceState{};
     std::list<StateT> passed;
@@ -137,11 +137,11 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
 
     // Keep iterating through the waiting list until it is empty
     while (!waiting.empty()) {
-        if (order == breadth_first) {
+        if (order == search_order::breadth_first) {
             currentState = waiting.front()->self;
             traceState = waiting.front();
             waiting.pop_front();
-        } else if (order == depth_first) {
+        } else if (order == search_order::depth_first) {
             currentState = waiting.back()->self;
             traceState = waiting.back();
             waiting.pop_back();
