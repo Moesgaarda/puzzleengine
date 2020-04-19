@@ -14,6 +14,7 @@
 #include <deque>
 #include <array>
 #include <functional> // std::function
+#include <benchmark/benchmark.h>
 
 /** Model of the river crossing: persons and a boat */
 struct person_t
@@ -275,7 +276,7 @@ void solve(CostFn&& cost) { // no type checking: OK hack here, but not good for 
 }
 
 
-int main() {
+/* int main() {
     std::cout << "-- Solve using depth as a cost: ---\n";
     solve([](const state_t& state, const cost_t& prev_cost){
         return cost_t{ prev_cost.depth+1, prev_cost.noise };
@@ -298,7 +299,47 @@ int main() {
             noise += 2; // younger son is more distressed, prefer him first
         return cost_t{ prev_cost.depth, noise };
     }); // son2 should get to the shore2 first
+} */
+
+// Enable for benchmarking
+void BM_main(benchmark::State& state){
+    for(auto _ : state) {
+        std::cout << "-- Solve using depth as a cost: ---\n";
+        solve([](const state_t& state, const cost_t& prev_cost){
+            return cost_t{ prev_cost.depth+1, prev_cost.noise };
+        }); // it is likely that daughters will get to shore2 first
+        std::cout << "-- Solve using noise as a cost: ---\n";
+        solve([](const state_t& state, const cost_t& prev_cost){
+            auto noise = prev_cost.noise;
+            if (state.persons[person_t::son1].pos == person_t::shore1)
+                noise += 2; // older son is more noughty, prefer him first
+            if (state.persons[person_t::son2].pos == person_t::shore1)
+                noise += 1;
+            return cost_t{ prev_cost.depth, noise };
+        }); // son1 should get to shore2 first
+        std::cout << "-- Solve using different noise as a cost: ---\n";
+        solve([](const state_t& state, const cost_t& prev_cost){
+            auto noise = prev_cost.noise;
+            if (state.persons[person_t::son1].pos == person_t::shore1)
+                noise += 1;
+            if (state.persons[person_t::son2].pos == person_t::shore1)
+                noise += 2; // younger son is more distressed, prefer him first
+            return cost_t{ prev_cost.depth, noise };
+        }); // son2 should get to the shore2 first
+    }
 }
+
+BENCHMARK(BM_main)->Iterations(100);
+BENCHMARK_MAIN();
+
+/* Benchmark results:
+ * g++ family.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfamily && ./benchmarkfamily
+ * List: 156532644 ns (108448079 ns)
+ *
+ */
+
+
+
 /** Example solutions (shows only the states with travel):
 --- Solve using depth as a cost: ---
 Boat,     Mothr,Fathr,Daug1,Daug2,Son1, Son2, Polic,Prisn

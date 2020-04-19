@@ -10,6 +10,7 @@
 #include <list>
 #include <array>
 #include <iostream>
+#include <benchmark/benchmark.h>
 
 enum actor { cabbage, goat, wolf }; // names of the actors
 enum class pos_t { shore1, travel, shore2}; // names of the actor positions
@@ -86,9 +87,25 @@ void solve(){
 		std::cout << "#  CGW\n" << trace;
 }
 
-int main(){
+/*int main(){
 	solve();
+}*/
+
+// Enable for benchmarking
+void BM_main(benchmark::State& state){
+    for(auto _ : state) {
+        solve();
+    }
 }
+
+BENCHMARK(BM_main)->Iterations(1000);
+BENCHMARK_MAIN();
+
+/* Benchmark results:
+ * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing
+ * List: 110149 ns (47074 ns)
+ *
+ */
 
 /** Sample output:
 #  CGW

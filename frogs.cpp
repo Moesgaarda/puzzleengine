@@ -11,6 +11,7 @@
 #include <vector>
 #include <list>
 #include <functional> // std::function
+#include <benchmark/benchmark.h>
 
 enum class frog { empty, green, brown };
 using stones_t = std::vector<frog>;
@@ -137,13 +138,33 @@ void solve(size_t frogs, search_order_t order = search_order_t::breadth_first)
 	}
 }
 
-int main()
+/*int main()
 {
 	explain();
 	std::cout << "--- Solve with depth-first search: ---\n";
 	solve(2, search_order_t::depth_first);
 	solve(4); // 20 frogs may take >5.8GB of memory
+}*/
+
+// Enable for benchmarking
+void BM_main(benchmark::State& state){
+    for(auto _ : state) {
+        explain();
+        std::cout << "--- Solve with depth-first search: ---\n";
+        solve(2, search_order_t::depth_first);
+        solve(4); // 20 frogs may take >5.8GB of memory
+    }
 }
+
+BENCHMARK(BM_main)->Iterations(1000);
+BENCHMARK_MAIN();
+
+/* Benchmark results:
+ * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
+ * List: 1920407 ns (543956 ns)
+ *
+ */
+
 /** Sample output:
 Leaping frog puzzle start: GG_BB
 state GG_BB has 4 transitions, leading to:
