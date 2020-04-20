@@ -12,7 +12,7 @@
 #include <iostream>
 
 // Enable or disable benchmarking.
-#define ENABLE_BENCHMARKING
+// #define ENABLE_BENCHMARKING
 #ifdef ENABLE_BENCHMARKING
 #include <benchmark/benchmark.h>
 #endif
