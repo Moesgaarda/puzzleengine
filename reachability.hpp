@@ -32,14 +32,14 @@ struct trace_state {
     StateT self = nullptr;
 };
 
-// Used to compare costs for the priority queue in cost search.
+/*// Used to compare costs for the priority queue in cost search.
 template<class StateT, class CostT>
 class MyComp{
 public:
-    bool operator()(std::pair<CostT, trace_state<StateT> *> &a, std::pair<CostT, trace_state<StateT> *> &b) {
-        return a.first.depth > b.first.depth;
+    bool operator()(const std::pair<CostT, trace_state<StateT> *> &a, std::pair<CostT, trace_state<StateT> *> &b) {
+        return a.first > b.first;
     }
-};
+};*/
 
 // Log function, logs to file so it doesn't flood the console
 void log(const std::string &input) {
@@ -79,6 +79,7 @@ public:
         _initialState = initialState;
         _transitionFunction = transitionFunction;
         _invariantFunction = invariantFunction;
+        _useCost = false;
 
         // Fail if arguments are of wrong types (Requirement 9)
         static_assert(std::is_class<StateT>::value, "StateT must be struct or class.");
@@ -205,7 +206,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     currentCost = _initialCost;
     trace_state<StateT> *traceState;
     std::list<StateT> passed, solution;
-    std::priority_queue<std::pair<CostT, trace_state<StateT> *>, ContainerT<std::pair<CostT, trace_state<StateT> *>>, MyComp<StateT, CostT>> waiting;
+    std::priority_queue<std::pair<CostT, trace_state<StateT> *>> waiting;
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 

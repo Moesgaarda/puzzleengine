@@ -256,13 +256,18 @@ struct cost_t {
     size_t depth{0}; // counts the number of transitions
     size_t noise{0}; // kids get bored on shore1 and start making noise there
     bool operator<(const cost_t &other) const {
-        if (depth < other.depth)
+        if (depth > other.depth)
             return true;
-        if (other.depth < depth)
+        if (other.depth > depth)
             return false;
-        return noise < other.noise;
+        return noise > other.noise;
     }
 };
+
+// Overload to compare for cost sorting
+bool operator>(const cost_t a, cost_t b) {
+    return a.depth > b.depth;
+}
 
 void successors(std::deque<std::function<void(state_t &)>> (*transitions)(const state_t &));
 
