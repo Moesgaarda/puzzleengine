@@ -6,12 +6,12 @@
 #define PUZZLEENGINE_REACHABILITY_HPP
 
 #include <list>
+#include <queue>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <iterator>
 #include <fstream>
-
 
 // Search order enum for requirement #4
 enum class search_order {
@@ -30,6 +30,15 @@ template<class StateT>
 struct trace_state {
     trace_state *parent = nullptr;
     StateT self = nullptr;
+};
+
+// Used to compare costs for the priority queue in cost search.
+template<class StateT, class CostT>
+class MyComp{
+public:
+    bool operator()(std::pair<CostT, trace_state<StateT> *> &a, std::pair<CostT, trace_state<StateT> *> &b) {
+        return a.first.depth > b.first.depth;
+    }
 };
 
 // Log function, logs to file so it doesn't flood the console
@@ -196,19 +205,19 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     currentCost = _initialCost;
     trace_state<StateT> *traceState;
     std::list<StateT> passed, solution;
-    std::list<std::pair<CostT, trace_state<StateT> *>> waiting;
+    std::priority_queue<std::pair<CostT, trace_state<StateT> *>, ContainerT<std::pair<CostT, trace_state<StateT> *>>, MyComp<StateT, CostT>> waiting;
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 
     // Generate a set of cost and trace state to find the lowest cost aka where to go next
-    waiting.push_back(std::make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
+    waiting.push(std::make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
 
     while (!waiting.empty()) {
         // Prepare to go to the next state, which is next in the queue
-        currentState = waiting.front().second->self;
-        currentCost = waiting.front().first; // First element of pair is cost
-        traceState = waiting.front().second; // Second element is trace state
-        waiting.pop_front();
+        currentState = waiting.top().second->self;
+        currentCost = waiting.top().first; // First element of pair is cost
+        traceState = waiting.top().second; // Second element is trace state
+        waiting.pop();
 
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
@@ -242,13 +251,13 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                     continue;
                 }
                 newCost = _costFunction(successor, currentCost);
-                waiting.push_back(std::make_pair(newCost, new trace_state<StateT>{traceState, successor}));
+                waiting.push(std::make_pair(newCost, new trace_state<StateT>{traceState, successor}));
             }
-            if (!transitions.empty()) {
+/*            if (!transitions.empty()) {
                 // Sort the list to make sure that the lowest cost is first.
                 waiting.sort([](const std::pair<CostT, trace_state<StateT> *> &a,
                                 std::pair<CostT, trace_state<StateT> *> &b) { return a.first < b.first; });
-            }
+            }*/
 
         }
     }

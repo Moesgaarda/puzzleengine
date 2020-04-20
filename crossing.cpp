@@ -114,8 +114,6 @@ BENCHMARK_MAIN();*/
  * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing
  * List:                                    110149 ns (47074 ns)
  * Deque:                                   83648  ns (19829 ns)
- * Not including std namespace in header:   67146  ns (20203)
- *
  * */
 
 /** Sample output:
