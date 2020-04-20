@@ -14,7 +14,12 @@
 #include <deque>
 #include <array>
 #include <functional> // std::function
+
+// Enable or disable benchmarking.
+#define ENABLE_BENCHMARKING
+#ifdef ENABLE_BENCHMARKING
 #include <benchmark/benchmark.h>
+#endif
 
 /** Model of the river crossing: persons and a boat */
 struct person_t {
@@ -292,8 +297,8 @@ void solve(CostFn &&cost) { // no type checking: OK hack here, but not good for 
     }
 }
 
-
-/*int main() {
+#ifndef ENABLE_BENCHMARKING
+int main() {
     std::cout << "-- Solve using depth as a cost: ---\n";
     solve([](const state_t &state, const cost_t &prev_cost) {
         return cost_t{prev_cost.depth + 1, prev_cost.noise};
@@ -316,9 +321,10 @@ void solve(CostFn &&cost) { // no type checking: OK hack here, but not good for 
             noise += 2; // younger son is more distressed, prefer him first
         return cost_t{prev_cost.depth, noise};
     }); // son2 should get to the shore2 first
-}*/
+}
+#endif
 
-
+#ifdef ENABLE_BENCHMARKING
 // Enable for benchmarking
 void BM_main(benchmark::State& state){
     for(auto _ : state) {
@@ -349,6 +355,7 @@ void BM_main(benchmark::State& state){
 
 BENCHMARK(BM_main)->Iterations(100);
 BENCHMARK_MAIN();
+#endif
 
 /* Benchmark results:
  * g++ family.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfamily && ./benchmarkfamily

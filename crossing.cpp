@@ -10,7 +10,12 @@
 #include <list>
 #include <array>
 #include <iostream>
-// #include <benchmark/benchmark.h>
+
+// Enable or disable benchmarking.
+#define ENABLE_BENCHMARKING
+#ifdef ENABLE_BENCHMARKING
+#include <benchmark/benchmark.h>
+#endif
 
 enum actor {
     cabbage, goat, wolf
@@ -96,19 +101,22 @@ void solve() {
         std::cout << "#  CGW\n" << trace;
 }
 
+#ifndef ENABLE_BENCHMARKING
 int main() {
     solve();
 }
+#endif
 
-// Enable for benchmarking
-/*void BM_main(benchmark::State& state){
+#ifdef ENABLE_BENCHMARKING
+void BM_main(benchmark::State& state){
     for(auto _ : state) {
         solve();
     }
 }
 
 BENCHMARK(BM_main)->Iterations(1000);
-BENCHMARK_MAIN();*/
+BENCHMARK_MAIN();
+#endif
 
 /* Benchmark results:
  * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing

@@ -11,7 +11,12 @@
 #include <vector>
 #include <list>
 #include <functional> // std::function
-// #include <benchmark/benchmark.h>
+
+// Enable or disable benchmarking.
+#define ENABLE_BENCHMARKING
+#ifdef ENABLE_BENCHMARKING
+#include <benchmark/benchmark.h>
+#endif
 
 enum class frog {
     empty, green, brown
@@ -141,15 +146,18 @@ void solve(size_t frogs, search_order order = search_order::breadth_first) {
     }
 }
 
+#ifndef ENABLE_BENCHMARKING
 int main() {
     explain();
     std::cout << "--- Solve with depth-first search: ---\n";
     solve(2, search_order::depth_first);
     solve(4); // 20 frogs may take >5.8GB of memory
 }
+#endif
 
+#ifdef ENABLE_BENCHMARKING
 // Enable for benchmarking
-/*void BM_main(benchmark::State& state){
+void BM_main(benchmark::State& state){
     for(auto _ : state) {
         explain();
         std::cout << "--- Solve with depth-first search: ---\n";
@@ -159,7 +167,8 @@ int main() {
 }
 
 BENCHMARK(BM_main)->Iterations(1000);
-BENCHMARK_MAIN();*/
+BENCHMARK_MAIN();
+#endif
 
 /* Benchmark results:
  * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
