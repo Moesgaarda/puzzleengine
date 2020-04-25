@@ -30,7 +30,7 @@ successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT
 template<class StateT>
 struct trace_state {
     std::shared_ptr<trace_state> parent = nullptr;
-    StateT self = nullptr;
+    StateT self;
 };
 
 

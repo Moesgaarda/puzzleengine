@@ -16,7 +16,7 @@
 #include <functional> // std::function
 
 // Enable or disable benchmarking.
-//#define ENABLE_BENCHMARKING
+// #define ENABLE_BENCHMARKING
 #ifdef ENABLE_BENCHMARKING
 #include <benchmark/benchmark.h>
 #endif
@@ -366,6 +366,7 @@ BENCHMARK_MAIN();
  * g++ family.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfamily && ./benchmarkfamily
  * List:                                                    156532644 ns (108448079 ns)
  * Priority queue instead of sorted list for waiting:       143821806 ns (104294183 ns)
+ * With smart pointers:                                     225769872 ns (50065230 ns)
  */
 
 

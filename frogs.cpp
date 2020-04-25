@@ -174,6 +174,7 @@ BENCHMARK_MAIN();
  * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
  * List:                                  1920407 ns (543956 ns)
  * Deque:                                 2659367 ns (504552 ns)
+ * With smart pointers (shared):          2189727 ns (524632 ns)
  */
 
 /** Sample output:
