@@ -26,33 +26,32 @@ enum class pos_t {
 using actors_t = std::array<pos_t, 3>; // positions of the actors
 
 // Overload to print position of actor
-std::ostream &operator<<(std::ostream &os, const pos_t &pos) {
-    switch (pos) {
+std::ostream &operator<<(std::ostream &os, pos_t &position) {
+    switch (position) {
         case pos_t::shore1:
-            os << "1";
-            break;
+            return os << "1";
         case pos_t::travel:
-            os << "~";
-            break;
+            return os << "~";
         case pos_t::shore2:
-            os << "2";
-            break;
+            return os << "2";
+        default:
+            return os << "Something went wrong!";
     }
-    return os;
 }
 
 // Overload to print actor
-std::ostream &operator<<(std::ostream &os, const actors_t &actors) {
-    os << actors[actor::cabbage] << actors[actor::goat] << actors[actor::wolf];
-    return os;
+std::ostream &operator<<(std::ostream &os, actors_t &actors) {
+    // Print position of cabbage, then goat and finally wolf
+    return os << actors[actor::cabbage] << actors[actor::goat] << actors[actor::wolf];
 }
 
 // Overload of << operator to print array content
 template<class StateT, template<class...> class ContainerT>
-std::ostream &operator<<(std::ostream &os, const ContainerT<std::array<StateT, 3>> &v) {
-    auto step = 0;
-    for (auto c : v) {
-        os << step++ << ": " << c << std::endl;
+std::ostream &operator<<(std::ostream &os, ContainerT<std::array<StateT, 3>> &arr) {
+    // Incremental value to keep track of the current step
+    int i = 0;
+    for (auto content : arr) {
+        os << i++ << ": " << content << std::endl;
     }
     return os;
 }
