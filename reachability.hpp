@@ -5,13 +5,11 @@
 #ifndef PUZZLEENGINE_REACHABILITY_HPP
 #define PUZZLEENGINE_REACHABILITY_HPP
 
-#include <list>
-#include <queue>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <iterator>
-#include <fstream>
+#include <list> // For list
+#include <queue> // For priority queue
+#include <functional> // For function
+#include <iostream> // For cout
+#include <memory> // For smart pointers
 
 // Search order enum for requirement #4
 enum class search_order {
@@ -25,7 +23,6 @@ successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT
     return transitions;
 }
 
-
 // Struct to save the current trace.
 template<class StateT>
 struct trace_state {
@@ -33,18 +30,16 @@ struct trace_state {
     StateT self;
 };
 
-
 // Log function, logs to file so it doesn't flood the console
 void log(const std::string &input) {
     std::cout << input << std::endl;
 }
 
-
 // The state space class
 template<class StateT, template<class...> class ContainerT, class CostT = std::nullptr_t>
 class state_space_t {
 private:
-    StateT _initialState; // Initial state
+    StateT _initialState;
     CostT _initialCost;
     std::function<ContainerT<std::function<void(StateT &)>>(StateT &)> _transitionFunction;
     std::function<bool(const StateT &)> _invariantFunction;
