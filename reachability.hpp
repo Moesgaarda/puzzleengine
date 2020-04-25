@@ -29,7 +29,7 @@ successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT
 // Struct to save the current trace.
 template<class StateT>
 struct trace_state {
-    trace_state *parent = nullptr;
+    std::shared_ptr<trace_state> parent = nullptr;
     StateT self = nullptr;
 };
 
@@ -73,7 +73,6 @@ public:
 
         // Fail if arguments are of wrong types (Requirement 9)
         static_assert(std::is_class<StateT>::value, "StateT must be struct or class.");
-
     };
 
     // Constructor with cost enabled
@@ -121,9 +120,9 @@ template<class validation_f>
 ContainerT<ContainerT<StateT>>
 state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, search_order order) {
     StateT currentState;
-    trace_state<StateT> *traceState{};
+    std::shared_ptr<trace_state<StateT>> traceState{};
     std::list<StateT> passed;
-    std::list<trace_state<StateT> *> waiting;
+    std::list<std::shared_ptr<trace_state<StateT>>> waiting;
     std::list<StateT> traces;
 
     // Two containers are used, one to hold a result in the given container type and another to
@@ -133,7 +132,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
 
     // Add the initial to waiting list to have a starting point
     // Set parent as nullptr to know when to stop
-    waiting.push_back(new trace_state<StateT>{nullptr, _initialState});
+    waiting.push_back(std::make_shared<trace_state<StateT>>(trace_state<StateT>{nullptr, _initialState}));
 
     // Keep iterating through the waiting list until it is empty
     while (!waiting.empty()) {
@@ -178,7 +177,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
                 transition(successor);
 
                 if (_invariantFunction(successor)) {
-                    waiting.push_back(new trace_state<StateT>{traceState, successor});
+                    waiting.push_back(std::make_shared<trace_state<StateT>>(trace_state<StateT>{traceState, successor}));
                 }
             }
         }
@@ -194,14 +193,14 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
     StateT currentState;
     CostT currentCost, newCost;
     currentCost = _initialCost;
-    trace_state<StateT> *traceState;
+    std::shared_ptr<trace_state<StateT>> traceState;
     std::list<StateT> passed, solution;
-    std::priority_queue<std::pair<CostT, trace_state<StateT> *>> waiting;
+    std::priority_queue<std::pair<CostT, std::shared_ptr<trace_state<StateT>>>> waiting;
     ContainerT<StateT> containedSolution;
     ContainerT<ContainerT<StateT>> result;
 
     // Generate a set of cost and trace state to find the lowest cost aka where to go next
-    waiting.push(std::make_pair(currentCost, new trace_state<StateT>{nullptr, _initialState}));
+    waiting.push(std::make_pair(currentCost, std::make_shared<trace_state<StateT>>(trace_state<StateT>{nullptr, _initialState})));
 
     while (!waiting.empty()) {
         // Prepare to go to the next state, which is next in the queue
@@ -242,7 +241,7 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                     continue;
                 }
                 newCost = _costFunction(successor, currentCost);
-                waiting.push(std::make_pair(newCost, new trace_state<StateT>{traceState, successor}));
+                waiting.push(std::make_pair(newCost, std::make_shared<trace_state<StateT>>(trace_state<StateT>{traceState, successor})));
             }
 
         }
