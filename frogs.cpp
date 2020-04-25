@@ -140,9 +140,9 @@ void solve(size_t frogs, search_order order = search_order::breadth_first) {
     auto solutions = space.check(
             [finish = std::move(finish)](const stones_t &state) { return state == finish; },
             order);
-    for (auto &&trace: solutions) {
-        std::cout << "Solution: trace of " << solutions.size() << " states\n";
-        std::cout << trace << std::endl;
+    for (auto i = 0; i < solutions.size(); i++) {
+        std::cout << "Solution: trace of " << solutions[i].size() << " states\n";
+        std::cout << solutions[i] << std::endl;
     }
 }
 
