@@ -25,6 +25,7 @@ successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT
     return transitions;
 }
 
+
 // Struct to save the current trace.
 template<class StateT>
 struct trace_state {
@@ -32,21 +33,10 @@ struct trace_state {
     StateT self = nullptr;
 };
 
-/*// Used to compare costs for the priority queue in cost search.
-template<class StateT, class CostT>
-class MyComp{
-public:
-    bool operator()(const std::pair<CostT, trace_state<StateT> *> &a, std::pair<CostT, trace_state<StateT> *> &b) {
-        return a.first > b.first;
-    }
-};*/
 
 // Log function, logs to file so it doesn't flood the console
 void log(const std::string &input) {
-    std::ofstream out;
-    out.open("/home/tekrus/output.txt", std::ofstream::app);
-    out << input;
-    out.close();
+    std::cout << input << std::endl;
 }
 
 
@@ -254,11 +244,6 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                 newCost = _costFunction(successor, currentCost);
                 waiting.push(std::make_pair(newCost, new trace_state<StateT>{traceState, successor}));
             }
-/*            if (!transitions.empty()) {
-                // Sort the list to make sure that the lowest cost is first.
-                waiting.sort([](const std::pair<CostT, trace_state<StateT> *> &a,
-                                std::pair<CostT, trace_state<StateT> *> &b) { return a.first < b.first; });
-            }*/
 
         }
     }
