@@ -4,6 +4,12 @@
  * Compile and run:
  * g++ -std=c++17 -pedantic -Wall -DNDEBUG -O3 -o crossing crossing.cpp && ./crossing
  */
+
+/** Benchmark results:
+ * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing
+ * List:                                    110149 ns (47074 ns)
+ * Deque:                                   83648  ns (19829 ns)
+ * */
 #include "reachability.hpp" // your header-only library solution
 
 #include <functional> // std::function
@@ -116,24 +122,3 @@ void BM_main(benchmark::State& state){
 BENCHMARK(BM_main)->Iterations(1000);
 BENCHMARK_MAIN();
 #endif
-
-/* Benchmark results:
- * g++ crossing.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkcrossing && ./benchmarkcrossing
- * List:                                    110149 ns (47074 ns)
- * Deque:                                   83648  ns (19829 ns)
- * */
-
-/** Sample output:
-#  CGW
-0: 111
-1: 1~1
-2: 121
-3: ~21
-4: 221
-5: 2~1
-6: 211
-7: 21~
-8: 212
-9: 2~2
-10: 222
-*/

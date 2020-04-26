@@ -5,6 +5,14 @@
  * Compile and run:
  * g++ -std=c++17 -pedantic -Wall -DNDEBUG -O3 -o frogs frogs.cpp && ./frogs
  */
+
+/** Benchmark results:
+ * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
+ * List:                                  1920407 ns (543956 ns)
+ * Deque:                                 2659367 ns (504552 ns)
+ * With smart pointers (shared):          2189727 ns (524632 ns)
+ */
+
 #include "reachability.hpp" // your header-only library solution
 
 #include <iostream>
@@ -140,7 +148,7 @@ void solve(size_t frogs, search_order order = search_order::breadth_first) {
     auto solutions = space.check(
             [finish = std::move(finish)](const stones_t &state) { return state == finish; },
             order);
-    for (auto i = 0; i < solutions.size(); i++) {
+    for (u_int i = 0; i < solutions.size(); i++) {
         std::cout << "Solution: trace of " << solutions[i].size() << " states\n";
         std::cout << solutions[i] << std::endl;
     }
@@ -169,98 +177,3 @@ void BM_main(benchmark::State& state){
 BENCHMARK(BM_main)->Iterations(1000);
 BENCHMARK_MAIN();
 #endif
-
-/* Benchmark results:
- * g++ frogs.cpp --std=c++17 -lbenchmark -lpthread -O3 -o benchmarkfrogs && ./benchmarkfrogs
- * List:                                  1920407 ns (543956 ns)
- * Deque:                                 2659367 ns (504552 ns)
- * With smart pointers (shared):          2189727 ns (524632 ns)
- */
-
-/** Sample output:
-Leaping frog puzzle start: GG_BB
-state GG_BB has 4 transitions, leading to:
-  state G_GBB has 2 transitions, leading to:
-    state _GGBB has 0 transitions
-    state GBG_B has 2 transitions, leading to:
-      state GB_GB has 2 transitions, leading to:
-        state _BGGB has 1 transitions, leading to:
-          state B_GGB has 0 transitions
-        state GBBG_ has 1 transitions, leading to:
-          state GBB_G has 0 transitions
-      state GBGB_ has 1 transitions, leading to:
-        state GB_BG has 2 transitions, leading to:
-          state _BGBG has 1 transitions, leading to:
-            state B_GBG has 1 transitions, leading to:
-              state BBG_G has 1 transitions, leading to:
-                state BB_GG has 0 transitions
-          state GBB_G has 0 transitions
-  state _GGBB has 0 transitions
-  state GGB_B has 2 transitions, leading to:
-    state G_BGB has 2 transitions, leading to:
-      state _GBGB has 1 transitions, leading to:
-        state BG_GB has 2 transitions, leading to:
-          state B_GGB has 0 transitions
-          state BGBG_ has 1 transitions, leading to:
-            state BGB_G has 1 transitions, leading to:
-              state B_BGG has 1 transitions, leading to:
-                state BB_GG has 0 transitions
-      state GB_GB has 2 transitions, leading to:
-        state _BGGB has 1 transitions, leading to:
-          state B_GGB has 0 transitions
-        state GBBG_ has 1 transitions, leading to:
-          state GBB_G has 0 transitions
-    state GGBB_ has 0 transitions
-  state GGBB_ has 0 transitions
-Leaping frog puzzle start: GG_BB, finish: BB_GG
---- Solve with default (breadth-first) search: ---
-Solution: a trace of 9 states
-State of 5 stones: GG_BB
-State of 5 stones: G_GBB
-State of 5 stones: GBG_B
-State of 5 stones: GBGB_
-State of 5 stones: GB_BG
-State of 5 stones: _BGBG
-State of 5 stones: B_GBG
-State of 5 stones: BBG_G
-State of 5 stones: BB_GG
---- Solve with depth-first search: ---
-Leaping frog puzzle start: GG_BB, finish: BB_GG
-Solution: trace of 9 states
-State of 5 stones: GG_BB
-State of 5 stones: GGB_B
-State of 5 stones: G_BGB
-State of 5 stones: _GBGB
-State of 5 stones: BG_GB
-State of 5 stones: BGBG_
-State of 5 stones: BGB_G
-State of 5 stones: B_BGG
-State of 5 stones: BB_GG
-Leaping frog puzzle start: GGGG_BBBB, finish: BBBB_GGGG
-Solution: trace of 25 states
-State of 9 stones: GGGG_BBBB
-State of 9 stones: GGG_GBBBB
-State of 9 stones: GGGBG_BBB
-State of 9 stones: GGGBGB_BB
-State of 9 stones: GGGB_BGBB
-State of 9 stones: GG_BGBGBB
-State of 9 stones: G_GBGBGBB
-State of 9 stones: GBG_GBGBB
-State of 9 stones: GBGBG_GBB
-State of 9 stones: GBGBGBG_B
-State of 9 stones: GBGBGBGB_
-State of 9 stones: GBGBGB_BG
-State of 9 stones: GBGB_BGBG
-State of 9 stones: GB_BGBGBG
-State of 9 stones: _BGBGBGBG
-State of 9 stones: B_GBGBGBG
-State of 9 stones: BBG_GBGBG
-State of 9 stones: BBGBG_GBG
-State of 9 stones: BBGBGBG_G
-State of 9 stones: BBGBGB_GG
-State of 9 stones: BBGB_BGGG
-State of 9 stones: BB_BGBGGG
-State of 9 stones: BBB_GBGGG
-State of 9 stones: BBBBG_GGG
-State of 9 stones: BBBB_GGGG
-*/

@@ -1,1 +1,0 @@
-/usr/bin/g++-9  -g -fsanitize=undefined -fsanitize=address   CMakeFiles/family.dir/family.cpp.o  -o family 

@@ -1,6 +1,13 @@
-//
-// Created by Daniel Moesgaard Andersen on 4/16/20.
-//
+/**
+ * Created by Daniel Moesgaard Andersen (dand16).
+ * Compiled with gcc 9.3.0 and the following compilation flags:
+ * g++ -std=c++17 -pedantic -Wall -DNDEBUG -O3 -o frogs frogs.cpp && ./frogs
+ * g++ -std=c++17 -pedantic -Wall -DNDEBUG -O3 -o family family.cpp && ./family
+ * g++ -std=c++17 -pedantic -Wall -DNDEBUG -O3 -o crossing crossing.cpp && ./crossing
+ *
+ * Some benchmark results from various storage and lookup strategies can be found in the various .cpp implementation
+ * files. (Requirement 10)
+*/
 
 #ifndef PUZZLEENGINE_REACHABILITY_HPP
 #define PUZZLEENGINE_REACHABILITY_HPP
@@ -11,12 +18,12 @@
 #include <iostream> // For cout
 #include <memory> // For smart pointers
 
-// Search order enum for requirement #4
+// Search order enum for requirement 4
 enum class search_order {
     breadth_first, depth_first
 };
 
-// Pass the transition generator function
+// Requirement 1: A generic successor generator function.
 template<class StateT, template<class...> class ContainerT>
 std::function<ContainerT<std::function<void(StateT &)>>(StateT &)>
 successors(ContainerT<std::function<void(StateT &)>> (*transitions)(const StateT &)) {
@@ -30,12 +37,7 @@ struct trace_state {
     StateT self;
 };
 
-// Log function, logs to file so it doesn't flood the console
-void log(const std::string &input) {
-    std::cout << input << std::endl;
-}
-
-// The state space class
+// The state space class, uses a template class ContainerT to support any iterable container. (Requirement 7)
 template<class StateT, template<class...> class ContainerT, class CostT = std::nullptr_t>
 class state_space_t {
 private:
@@ -46,11 +48,11 @@ private:
     bool _useCost = false;
     std::function<CostT(const StateT &state, const CostT &cost)> _costFunction;
 
-    template<class validation_f>
-    ContainerT<ContainerT<StateT>> solver(validation_f isGoalState, search_order searchOrder);
+    template<class ValidationF>
+    ContainerT<ContainerT<StateT>> solver(ValidationF isGoalState, search_order searchOrder);
 
-    template<class validation_f>
-    ContainerT<ContainerT<StateT>> costSolver(validation_f isGoalState);
+    template<class ValidationF>
+    ContainerT<ContainerT<StateT>> costSolver(ValidationF isGoalState);
 
 
 public:
@@ -79,7 +81,6 @@ public:
             bool (*invariantFunction)(const StateT &) = [](const StateT &s) { return true; },
             lambda costFunction = [](const StateT &s, const CostT &c) { return CostT{0, 0}; }
     ) {
-
         // Fail if arguments are of wrong types (Requirement 9)
         // It is enough to check if StateT and CostT are classes, as it also captures structs.
         static_assert(std::is_class<StateT>::value, "StateT must be a class or struct.");
@@ -95,11 +96,11 @@ public:
         _useCost = true;
     }
 
-    // The function to call the solver, default search order is breadth_first, as a sensible choice as defined in
+    // The function to call the solver, default search order is breadth_first, as a reasonable choice as defined in
     // requirement 8.
-    template<class validation_f>
+    template<class ValidationF>
     ContainerT<ContainerT<StateT>> check(
-            validation_f isGoalState,
+            ValidationF isGoalState,
             search_order order = search_order::breadth_first) {
 
         if (_useCost) {
@@ -111,9 +112,9 @@ public:
 
 // The default solver when cost is not involved
 template<class StateT, template<class...> class ContainerT, class CostT>
-template<class validation_f>
+template<class ValidationF>
 ContainerT<ContainerT<StateT>>
-state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, search_order order) {
+state_space_t<StateT, ContainerT, CostT>::solver(ValidationF isGoalState, search_order order) {
     StateT currentState;
     std::shared_ptr<trace_state<StateT>> traceState{};
     std::list<StateT> passed;
@@ -131,6 +132,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
 
     // Keep iterating through the waiting list until it is empty
     while (!waiting.empty()) {
+        // Requirement 4: Support various search orders (BFS, DFS)
         if (order == search_order::breadth_first) {
             currentState = waiting.front()->self;
             traceState = waiting.front();
@@ -140,8 +142,10 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
             traceState = waiting.back();
             waiting.pop_back();
         } else {
-            log("Invalid search order supplied.");
+            std::cout << "Invalid search order supplied.";
         }
+
+        // Requirement 2: Find a state satisfying the goal predicate
         if (isGoalState(currentState)) {
             while (traceState->parent != nullptr) {
                 // Add stack trace to the solution list
@@ -157,6 +161,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
                 containedSolution.push_back(trace);
             }
 
+            // Requirement 3: containedSolution now holds a state sequence from initial to a goal state.
             // Add found result to list of result traces.
             result.push_back(containedSolution);
         }
@@ -171,6 +176,7 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
                 auto successor{currentState};
                 transition(successor);
 
+                // Requirement 5: Support a given invariant predicate.
                 if (_invariantFunction(successor)) {
                     waiting.push_back(std::make_shared<trace_state<StateT>>(trace_state<StateT>{traceState, successor}));
                 }
@@ -180,11 +186,12 @@ state_space_t<StateT, ContainerT, CostT>::solver(validation_f isGoalState, searc
     return result;
 }
 
-// The solver for when cost is involved.
+// Requirement 6: Support a custom cost function over states.
+// This cost solver uses the cost rather than DFS or BFS for traversing the waiting list.
 template<class StateT, template<class...> class ContainerT, class CostT>
-template<class validation_f>
+template<class ValidationF>
 ContainerT<ContainerT<StateT>>
-state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
+state_space_t<StateT, ContainerT, CostT>::costSolver(ValidationF isGoalState) {
     StateT currentState;
     CostT currentCost, newCost;
     currentCost = _initialCost;
@@ -238,7 +245,6 @@ state_space_t<StateT, ContainerT, CostT>::costSolver(validation_f isGoalState) {
                 newCost = _costFunction(successor, currentCost);
                 waiting.push(std::make_pair(newCost, std::make_shared<trace_state<StateT>>(trace_state<StateT>{traceState, successor})));
             }
-
         }
     }
 

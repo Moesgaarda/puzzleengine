@@ -1,1 +1,0 @@
-/usr/bin/g++-9  -g -fsanitize=undefined -fsanitize=address   CMakeFiles/crossing.dir/crossing.cpp.o  -o crossing 
